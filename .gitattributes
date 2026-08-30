@@ -1,0 +1,7 @@
+# Forcer les fins de ligne LF pour les scripts shell (sinon le conteneur
+# Linux échoue avec « no such file or directory » sur le shebang).
+*.sh text eol=lf
+docker/entrypoint.sh text eol=lf
+
+# Normaliser le texte, laisser Git gérer le reste
+* text=auto

@@ -1,0 +1,47 @@
+# ─────────────── Secrets & config locale ───────────────
+.env
+*.env
+!.env.example
+
+# ─────────────── Python / Django ───────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+db.sqlite3
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+.Python
+
+# Fichiers collectés par collectstatic (régénérés) — on garde static/ source
+staticfiles/
+
+# Uploads runtime & cache généré (narration Gemini à la demande)
+media/
+veh_project/media/
+
+# ─────────────── Flutter / Dart ───────────────
+veh_flutter/build/
+veh_flutter/.dart_tool/
+veh_flutter/.flutter-plugins
+veh_flutter/.flutter-plugins-dependencies
+veh_flutter/.packages
+veh_flutter/pubspec.lock
+**/doctor_summary*.txt
+
+# ─────────────── Node (Tailwind, si présent) ───────────────
+node_modules/
+
+# ─────────────── Éditeurs & OS ───────────────
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ─────────────── Sauvegardes locales avant restylage ───────────────
+_sauvegarde_avant_novapay/

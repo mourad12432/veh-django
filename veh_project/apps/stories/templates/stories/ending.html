@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Fin — {{ story.title }} | VEH{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block extra_head %}
+<style>
+    #ending-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background-size: cover;
+        background-position: center;
+    }
+    #ending-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        background: rgba(5, 5, 8, 0.88);
+    }
+    #ending-content {
+        position: relative;
+        z-index: 10;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Fond selon le type de fin -->
+<div id="ending-bg"
+     {% if ending_scene.image %}
+     style="background-image: url('{{ ending_scene.image.url }}')"
+     {% elif ending_scene.ending_type == 'good' %}
+     style="background: linear-gradient(135deg, #0a1a0a, #0a200a)"
+     {% elif ending_scene.ending_type == 'bad' %}
+     style="background: linear-gradient(135deg, #1a0a0a, #200a0a)"
+     {% else %}
+     style="background: linear-gradient(135deg, #0a0a1a, #1a1a0a)"
+     {% endif %}>
+</div>
+<div id="ending-overlay"></div>
+
+<div id="ending-content" class="min-h-screen flex flex-col items-center justify-center px-6 py-20">
+
+    <!-- Icône de fin -->
+    <div class="mb-8 animate-fade-in">
+        {% if ending_scene.ending_type == 'good' %}
+        <div class="w-20 h-20 rounded-full bg-green-900/40 border-2 border-green-600 flex items-center justify-center text-4xl">
+            ✦
+        </div>
+        {% elif ending_scene.ending_type == 'bad' %}
+        <div class="w-20 h-20 rounded-full bg-red-900/40 border-2 border-red-700 flex items-center justify-center text-4xl">
+            ✕
+        </div>
+        {% else %}
+        <div class="w-20 h-20 rounded-full bg-gray-800 border-2 border-gray-600 flex items-center justify-center text-4xl">
+            ◈
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Titre de la fin -->
+    <div class="text-center mb-2 animate-fade-in">
+        {% if ending_scene.ending_type == 'good' %}
+        <span class="text-green-400 text-xs uppercase tracking-widest">Bonne fin</span>
+        {% elif ending_scene.ending_type == 'bad' %}
+        <span class="text-red-400 text-xs uppercase tracking-widest">Mauvaise fin</span>
+        {% else %}
+        <span class="text-gray-400 text-xs uppercase tracking-widest">Fin neutre</span>
+        {% endif %}
+    </div>
+
+    <h1 class="font-narrative text-4xl md:text-5xl text-white text-center mb-8 animate-fade-in">
+        {{ story.title }}
+    </h1>
+
+    <!-- Texte de conclusion -->
+    <div class="max-w-xl text-center mb-12 animate-fade-in">
+        <p class="font-narrative text-xl text-gray-300 leading-relaxed italic">
+            "{{ ending_scene.narrative }}"
+        </p>
+    </div>
+
+    <!-- ═══ RÉSUMÉ DU PARCOURS ═══ -->
+    {% if history %}
+    <div class="max-w-lg w-full mb-12">
+        <h2 class="text-gray-500 text-xs uppercase tracking-widest text-center mb-4">Votre parcours</h2>
+        <div class="space-y-2">
+            {% for entry in history %}
+            <div class="bg-gray-900/60 border border-gray-800 rounded-lg px-4 py-3 flex items-start gap-3">
+                <div class="w-5 h-5 rounded-full bg-purple-900/60 border border-purple-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div>
+                </div>
+                <div class="text-sm">
+                    <span class="text-gray-400 font-mono text-xs">{{ entry.scene.scene_key }}</span>
+                    {% if entry.choice_made %}
+                    <p class="text-gray-300 mt-0.5">→ {{ entry.choice_made.text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ BOUTONS D'ACTION ═══ -->
+    <div class="flex flex-col sm:flex-row gap-4 animate-slide-up">
+        <!-- Recommencer -->
+        <form method="post" action="{% url 'restart' story_slug=story.slug %}">
+            {% csrf_token %}
+            <button type="submit"
+                    class="bg-purple-700 hover:bg-purple-600 text-white font-medium px-8 py-3 rounded-xl transition-all hover:scale-105">
+                Rejouer l'aventure
+            </button>
+        </form>
+
+        <!-- Retour à l'accueil -->
+        <a href="{% url 'home' %}"
+           class="border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-gray-200 font-medium px-8 py-3 rounded-xl transition-all text-center">
+            Retour à la bibliothèque
+        </a>
+    </div>
+
+    <!-- Crédits discrets -->
+    <div class="mt-16 text-center text-gray-800 text-xs">
+        <p>VEH — Vous Êtes le Héro</p>
+    </div>
+</div>
+
+{% endblock %}

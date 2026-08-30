@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Inscription — VEH{% endblock %}
+
+{% block content %}
+<div class="np-grid relative min-h-screen flex items-center justify-center px-4 pt-16 overflow-hidden"
+     style="--grid-x: 50%; --grid-y: 20%">
+
+    <!-- Fond décoratif -->
+    <div class="absolute inset-0 bg-gradient-to-br from-gray-950 via-purple-950/20 to-gray-950 pointer-events-none"></div>
+
+    <div class="relative z-10 w-full max-w-md">
+
+        <!-- Logo / Titre -->
+        <div class="text-center mb-8">
+            <a href="{% url 'home' %}" class="inline-flex flex-col items-center gap-3">
+                <div class="w-12 h-12 bg-purple-700 rounded-xl flex items-center justify-center font-bold text-white">
+                    VEH
+                </div>
+                <span class="font-narrative text-gray-400 text-sm">Vous Êtes le Héro</span>
+            </a>
+            <h1 class="font-narrative text-3xl text-white mt-4">Votre aventure commence</h1>
+            <p class="text-gray-500 text-sm mt-1">Créez votre compte de héros.</p>
+        </div>
+
+        <!-- Carte du formulaire -->
+        <div class="bg-gray-900/80 border border-gray-800 rounded-2xl p-8 backdrop-blur-sm">
+
+            <!-- Erreurs globales -->
+            {% if form.non_field_errors %}
+            <div class="bg-red-900/40 border border-red-700/50 rounded-lg px-4 py-3 mb-6 text-red-300 text-sm">
+                {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" class="space-y-5">
+                {% csrf_token %}
+
+                <!-- Nom d'utilisateur -->
+                <div>
+                    <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">
+                        Nom d'aventurier
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ form.username.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">
+                        Adresse email
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Mot de passe -->
+                <div>
+                    <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">
+                        Mot de passe
+                    </label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ form.password1.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Confirmation -->
+                <div>
+                    <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">
+                        Confirmer le mot de passe
+                    </label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ form.password2.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Bouton d'inscription -->
+                <button type="submit"
+                        class="np-btn w-full font-medium py-3 rounded-xl mt-2">
+                    Créer mon compte
+                </button>
+            </form>
+
+            <!-- Lien connexion -->
+            <p class="text-center text-gray-600 text-sm mt-6">
+                Déjà un compte ?
+                <a href="{% url 'login' %}" class="text-purple-400 hover:text-purple-300 transition-colors ml-1">
+                    Se connecter
+                </a>
+            </p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

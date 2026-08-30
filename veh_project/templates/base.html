@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}VEH — Vous Êtes le Héro{% endblock %}</title>
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        /* ────────────────────────────────────────────────────────────────
+           Charte « NovaPay » adaptée à VEH.
+           Les échelles gray/purple/red/green/yellow de Tailwind sont
+           remappées sur la palette ardoise + bleu ciel du template, ce qui
+           rehabille toutes les pages sans toucher leurs classes.
+           ──────────────────────────────────────────────────────────────── */
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans':      ['"DM Sans"', 'system-ui', 'sans-serif'],
+                        'display':   ['Outfit', 'system-ui', 'sans-serif'],
+                        'narrative': ['Outfit', 'system-ui', 'sans-serif'],
+                        'story':     ['"Crimson Text"', 'Georgia', 'serif'],
+                    },
+                    colors: {
+                        /* Surfaces ardoise — remplace l'échelle grise */
+                        gray: {
+                            100: '#E4EEF8', 200: '#E4EEF8', 300: '#A8C4DC',
+                            400: '#8AAEC8', 500: '#506070', 600: '#2A4060',
+                            700: '#1E2838', 800: '#1A2130', 900: '#141920',
+                            950: '#0F1319',
+                        },
+                        /* Accent bleu ciel — remplace l'échelle violette */
+                        purple: {
+                            200: '#A5DAF6', 300: '#7EC8F0', 400: '#6BB4EE',
+                            500: '#4A9EE8', 600: '#3A85CC', 700: '#2A6AAA',
+                            800: '#1E5182', 900: '#12395C', 950: '#0D2A44',
+                        },
+                        /* Statuts — teintes NovaPay */
+                        green: {
+                            200: '#A8EED0', 300: '#7FE3B8', 400: '#3DCC8E',
+                            600: '#2E9E6C', 700: '#247F57', 900: '#123D2C',
+                        },
+                        red: {
+                            200: '#F7C4C4', 300: '#F19393', 400: '#E85A5A',
+                            700: '#A83A3A', 900: '#4A1D1D',
+                        },
+                        yellow: {
+                            200: '#F3E0AE', 700: '#9C8038', 900: '#3F341A',
+                        },
+                        /* Jetons nommés, pour le code neuf */
+                        veh: {
+                            'bg':      '#0F1319', 'surface':  '#141920',
+                            'raised':  '#1A2130', 'overlay':  '#1E2838',
+                            'sky':     '#4A9EE8', 'sky-soft': '#7EC8F0',
+                            'sky-deep':'#2A6AAA', 'line':     '#1E3050',
+                        },
+                    },
+                    transitionTimingFunction: {
+                        'silk':      'cubic-bezier(0.16, 1, 0.3, 1)',
+                        'silk-fast': 'cubic-bezier(0.25, 1, 0.4, 1)',
+                    },
+                    animation: {
+                        'fade-in':    'fadeIn 0.8s cubic-bezier(0.16,1,0.3,1) both',
+                        'slide-up':   'slideUp 0.6s cubic-bezier(0.16,1,0.3,1) both',
+                        'pulse-glow': 'pulseGlow 2.4s infinite',
+                    },
+                    keyframes: {
+                        fadeIn:  { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: {
+                            '0%':   { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)',    opacity: '1' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 0 0 rgba(74,158,232,0.35)' },
+                            '50%':      { boxShadow: '0 0 0 12px rgba(74,158,232,0)' },
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+
+    <!-- Polices : Outfit (titres), DM Sans (interface), Crimson Text (récit) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #0F1319;  --bg2: #141920; --bg3: #1A2130; --bg4: #1E2838;
+            --sky: #4A9EE8; --sky2: #7EC8F0; --sky3: #2A6AAA; --sky4: #0D2A44;
+            --text: #E4EEF8; --text2: #8AAEC8; --text3: #506070;
+            --line: #1E3050; --line2: #2A4060;
+            --silk: cubic-bezier(0.16, 1, 0.3, 1);
+            --nav-h: 68px;
+        }
+
+        body { font-family: 'DM Sans', system-ui, sans-serif; }
+        h1, h2, h3, .font-narrative {
+            font-family: 'Outfit', system-ui, sans-serif;
+            letter-spacing: -0.03em;
+        }
+        /* Le texte des histoires reste en serif : lecture longue */
+        .font-story { font-family: 'Crimson Text', Georgia, serif; }
+
+        /* Barre de défilement */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--sky3); }
+
+        /* Grille diagonale — signature visuelle du template */
+        .np-grid::before {
+            content: '';
+            position: absolute; inset: 0;
+            pointer-events: none;
+            background-image:
+                repeating-linear-gradient(45deg,  rgba(74,158,232,.35) 0 1px, transparent 1px 120px),
+                repeating-linear-gradient(-45deg, rgba(74,158,232,.35) 0 1px, transparent 1px 120px);
+            -webkit-mask-image: radial-gradient(ellipse 70% 60% at var(--grid-x, 50%) var(--grid-y, 0%), #000 0%, transparent 70%);
+                    mask-image: radial-gradient(ellipse 70% 60% at var(--grid-x, 50%) var(--grid-y, 0%), #000 0%, transparent 70%);
+            opacity: .5;
+        }
+
+        /* Révélation au défilement */
+        .reveal {
+            opacity: 0; transform: translateY(24px);
+            transition: opacity .8s var(--silk), transform .8s var(--silk);
+        }
+        .reveal.in { opacity: 1; transform: none; }
+        @media (prefers-reduced-motion: reduce) {
+            .reveal { opacity: 1; transform: none; transition: none; }
+        }
+
+        /* Navigation — micro-translation, pas de soulignement glissant */
+        .np-nav-link {
+            color: var(--text2);
+            transition: color .5s var(--silk), transform .5s var(--silk);
+        }
+        .np-nav-link:hover { color: var(--text); transform: translateY(-1px); }
+
+        /* Bouton principal */
+        .np-btn {
+            background: var(--sky3);
+            color: #fff;
+            transition: background .5s var(--silk), transform .5s var(--silk), box-shadow .5s var(--silk);
+        }
+        .np-btn:hover {
+            background: var(--sky);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 10px 30px -10px rgba(74,158,232,.55);
+        }
+
+        /* Champs rendus par Django (widgets sans classes CSS) */
+        input[type="text"], input[type="password"], input[type="email"], textarea {
+            width: 100%;
+            background: #0F1319;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 12px 14px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            transition: border-color .5s var(--silk), box-shadow .5s var(--silk);
+        }
+        input[type="text"]:focus, input[type="password"]:focus,
+        input[type="email"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--sky3);
+            box-shadow: 0 0 0 3px rgba(74,158,232,.15);
+        }
+        input::placeholder, textarea::placeholder { color: var(--text3); }
+
+        .page-transition { animation: fadeIn .6s var(--silk) both; }
+    </style>
+
+    <!-- Sans JavaScript, le contenu à révéler doit rester visible -->
+    <noscript>
+        <style>
+            .reveal { opacity: 1 !important; transform: none !important; }
+        </style>
+    </noscript>
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+    <!-- ═══════════════════════ NAVBAR ═══════════════════════ -->
+    {% block navbar %}
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-gray-950/85 backdrop-blur-md border-b border-gray-700"
+         style="height: var(--nav-h)">
+        <div class="max-w-[1280px] h-full mx-auto px-6 flex items-center justify-between">
+
+            <!-- Logo -->
+            <a href="{% url 'home' %}" class="flex items-center gap-3 group">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center font-display font-bold text-white text-sm bg-purple-700 group-hover:bg-purple-500 transition-colors duration-500 ease-silk">
+                    VEH
+                </div>
+                <span class="font-display font-semibold text-[15px] text-gray-200 hidden sm:block">
+                    Vous Êtes le Héro
+                </span>
+            </a>
+
+            <!-- Navigation -->
+            <div class="flex items-center gap-7">
+                <a href="{% url 'home' %}" class="np-nav-link text-sm">Bibliothèque</a>
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'profile' %}" class="np-nav-link text-sm">Mon Profil</a>
+                    <form method="post" action="{% url 'logout' %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="np-nav-link text-sm hover:text-red-400">
+                            Déconnexion
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="np-nav-link text-sm">Connexion</a>
+                    <a href="{% url 'register' %}"
+                       class="np-btn text-sm font-medium px-5 py-2 rounded-lg">
+                        S'inscrire
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    {% endblock %}
+
+    <!-- ═══════════════════════ MESSAGES ═══════════════════════ -->
+    {% if messages %}
+    <div class="fixed top-20 right-4 z-50 space-y-2 max-w-sm">
+        {% for message in messages %}
+        <div class="px-4 py-3 rounded-xl text-sm border backdrop-blur-md animate-slide-up
+            {% if message.tags == 'success' %}bg-green-900/80 border-green-700 text-green-300
+            {% elif message.tags == 'error' %}bg-red-900/80 border-red-700 text-red-300
+            {% elif message.tags == 'warning' %}bg-yellow-900/80 border-yellow-700 text-yellow-200
+            {% else %}bg-purple-900/80 border-purple-700 text-purple-200{% endif %}"
+             x-data="{ show: true }" x-show="show">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ═══════════════════════ CONTENU ═══════════════════════ -->
+    <main class="page-transition">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ═══════════════════════ FOOTER ═══════════════════════ -->
+    {% block footer %}
+    <footer class="border-t border-gray-700 mt-24">
+        <div class="max-w-[1280px] mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-md bg-purple-700 flex items-center justify-center font-display font-bold text-white text-[11px]">
+                    VEH
+                </div>
+                <span class="text-gray-500 text-sm">Chaque choix forge votre destin.</span>
+            </div>
+            <p class="text-gray-500 text-xs">VEH — Vous Êtes le Héro</p>
+        </div>
+    </footer>
+    {% endblock %}
+
+    <!-- ═══════════════════════ SCRIPTS ═══════════════════════ -->
+    <script>
+        // Masquage automatique des messages flash
+        setTimeout(() => {
+            document.querySelectorAll('[x-data]').forEach(el => {
+                el.style.transition = 'opacity .5s';
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 500);
+            });
+        }, 4000);
+
+        // Révélation progressive au défilement
+        (() => {
+            const items = document.querySelectorAll('.reveal');
+            if (!items.length) return;
+            if (!('IntersectionObserver' in window)) {
+                items.forEach(el => el.classList.add('in'));
+                return;
+            }
+            const io = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+                    entry.target.classList.add('in');
+                    io.unobserve(entry.target);
+                });
+            }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+            items.forEach(el => io.observe(el));
+        })();
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

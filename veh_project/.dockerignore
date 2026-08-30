@@ -1,0 +1,20 @@
+# Ne pas copier ces éléments dans l'image Docker
+.env
+*.env
+!.env.example
+
+db.sqlite3
+*.sqlite3
+
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+
+staticfiles/
+media/
+
+.git/
+.gitignore
+*.md

@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ scene.scene_key }} — {{ story.title }} | VEH{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Fond de scène plein écran */
+    #scene-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        transition: opacity 0.8s ease;
+    }
+
+    /* Overlay gradient pour lisibilité du texte */
+    #scene-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        background: linear-gradient(
+            to bottom,
+            rgba(5, 5, 8, 0.3) 0%,
+            rgba(5, 5, 8, 0.1) 30%,
+            rgba(5, 5, 8, 0.7) 60%,
+            rgba(5, 5, 8, 0.95) 100%
+        );
+    }
+
+    /* Contenu positionné au-dessus du fond */
+    #game-content {
+        position: relative;
+        z-index: 10;
+    }
+
+    /* Texte narratif — style roman */
+    .narrative-text {
+        font-family: 'Crimson Text', Georgia, serif;
+        font-size: 1.2rem;
+        line-height: 1.9;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+
+    /* Boutons de choix */
+    .choice-btn {
+        background: rgba(15, 15, 25, 0.85);
+        border: 1px solid rgba(74, 158, 232, 0.3);
+        backdrop-filter: blur(12px);
+        transition: all 0.2s ease;
+    }
+    .choice-btn:hover {
+        background: rgba(42, 106, 170, 0.4);
+        border-color: rgba(126, 200, 240, 0.6);
+        transform: translateX(4px);
+        box-shadow: 0 0 20px rgba(74, 158, 232, 0.3);
+    }
+    .choice-btn:active {
+        transform: translateX(2px) scale(0.99);
+    }
+
+    /* Lettre décorative pour les choix */
+    .choice-letter {
+        min-width: 2rem;
+        height: 2rem;
+        background: rgba(74, 158, 232, 0.3);
+        border: 1px solid rgba(126, 200, 240, 0.4);
+        border-radius: 0.375rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #7EC8F0;
+        flex-shrink: 0;
+    }
+
+    /* ── Rejouabilité : mise en avant des chemins non explorés ── */
+
+    /* Choix déjà emprunté lors d'une partie précédente — atténué */
+    .choice-explored { opacity: 0.5; }
+    .choice-explored:hover { opacity: 0.85; }
+
+    /* Choix jamais essayé — halo violet pulsant pour inviter à l'explorer */
+    .choice-unexplored {
+        border-color: rgba(126, 200, 240, 0.7);
+        animation: choicePulse 2.2s ease-in-out infinite;
+    }
+    @keyframes choicePulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(126, 200, 240, 0); }
+        50%      { box-shadow: 0 0 16px 2px rgba(126, 200, 240, 0.5); }
+    }
+
+    /* Badges d'état de choix */
+    .choice-tag {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.15rem 0.55rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+    .choice-tag-explored {
+        background: rgba(75, 85, 99, 0.35);
+        color: #9ca3af;
+    }
+    .choice-tag-new {
+        background: rgba(126, 200, 240, 0.18);
+        color: #c4b5fd;
+        border: 1px solid rgba(126, 200, 240, 0.45);
+    }
+
+    /* Respect de l'accessibilité : pas d'animation si l'utilisateur la refuse */
+    @media (prefers-reduced-motion: reduce) {
+        .choice-unexplored { animation: none; border-color: rgba(126, 200, 240, 0.7); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Données pour JavaScript -->
+<div id="game-data"
+     data-music="{{ music_file }}"
+     data-transition="{{ music_transition }}"
+     data-narration="{% if scene.audio_narration %}{{ scene.audio_narration.url }}{% endif %}"
+     data-scene-key="{{ scene.scene_key }}"
+     data-narration-endpoint="{% url 'narration' story.slug scene.scene_key %}"
+     data-static-url="{% get_static_prefix %}">
+</div>
+<!-- Texte narratif sécurisé pour la synthèse vocale -->
+{{ narrative|json_script:"veh-narrative" }}
+
+<!-- Fond de scène -->
+<div id="scene-bg"
+     {% if scene.image %}
+     data-has-image="1"
+     style="background-image: url('{{ scene.image.url }}')"
+     {% else %}
+     style="background: linear-gradient(135deg, #0F1319 0%, #16263A 50%, #0F1319 100%)"
+     {% endif %}>
+</div>
+<div id="scene-overlay"></div>
+
+<!-- Interface de jeu plein écran -->
+<div id="game-content" class="min-h-screen flex flex-col">
+
+    <!-- ═══ BARRE DE NAVIGATION DU JEU ═══ -->
+    <header class="flex items-center justify-between px-6 py-4">
+        <a href="{% url 'home' %}"
+           class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Bibliothèque
+        </a>
+
+        <div class="flex items-center gap-4">
+            <!-- Titre de l'histoire -->
+            <span class="text-gray-500 text-sm hidden sm:block font-narrative">
+                {{ story.title }}
+            </span>
+
+            <!-- Bouton narration / TTS — affiché par JS -->
+            <button id="narration-btn"
+                    class="hidden items-center gap-1.5 transition-colors px-3 py-1.5 rounded-lg text-sm
+                           text-purple-400 hover:text-purple-200 hover:bg-purple-900/30"
+                    title="Lire / Pause la narration">
+                <!-- Haut-parleur (arrêté) -->
+                <svg id="narration-icon-play" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                </svg>
+                <!-- Pause (en cours) -->
+                <svg id="narration-icon-pause" class="w-4 h-4 hidden" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                </svg>
+                <span id="narration-label">Lire</span>
+            </button>
+
+            <!-- Contrôle du son -->
+            <button id="mute-btn"
+                    class="text-gray-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-800/50"
+                    title="Activer/désactiver la musique">
+                <svg id="icon-sound-on" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15.536 8.464a5 5 0 010 7.072M12 6v12m0 0l-4-4m4 4l4-4M9 8.172L5 12v0l4 3.828"/>
+                </svg>
+                <svg id="icon-sound-off" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- ═══ TEXTE NARRATIF ═══ -->
+    <div class="flex-1 flex items-end pb-8">
+        <div class="w-full max-w-2xl mx-auto px-6">
+
+            <!-- Clé de scène (discret) -->
+            <div class="text-purple-700/60 text-xs uppercase tracking-widest mb-4 font-mono">
+                {{ scene.scene_key }}
+            </div>
+
+            <!-- Texte principal -->
+            <div class="narrative-text text-gray-200 mb-10 animate-fade-in">
+                {{ narrative }}
+            </div>
+
+            <!-- ═══ CHOIX ═══ -->
+            {% if not scene.is_ending %}
+            {% if is_revisit %}
+            <p class="text-xs text-purple-300/70 mb-4 leading-relaxed">
+                ✨ Les choix qui <span class="text-purple-300 font-medium">brillent</span>
+                mènent à des chemins que vous n'avez pas encore explorés — tentez-les pour
+                découvrir d'autres fins.
+            </p>
+            {% endif %}
+            <div class="space-y-3 animate-slide-up">
+                {% for choice in choices %}
+                <form method="post" action="{% url 'choose' story_slug=story.slug %}" class="choice-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="choice_id" value="{{ choice.id }}">
+                    <button type="submit"
+                            class="choice-btn w-full text-left flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-200
+                                   {% if choice.id in explored_choice_ids %}choice-explored{% elif is_revisit %}choice-unexplored{% endif %}">
+                        <span class="choice-letter">{{ forloop.counter }}</span>
+                        <span class="flex-1 text-sm leading-snug">{{ choice.text }}</span>
+                        {% if choice.id in explored_choice_ids %}
+                        <span class="choice-tag choice-tag-explored">déjà exploré</span>
+                        {% elif is_revisit %}
+                        <span class="choice-tag choice-tag-new">nouveau</span>
+                        {% endif %}
+                    </button>
+                </form>
+                {% empty %}
+                <div class="text-center py-4">
+                    <a href="{% url 'ending' story_slug=story.slug %}"
+                       class="bg-purple-700 hover:bg-purple-600 text-white px-8 py-3 rounded-lg transition-all">
+                        Voir la fin
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Scène de fin — boutons vers ending -->
+            <div class="text-center">
+                <a href="{% url 'ending' story_slug=story.slug %}"
+                   class="inline-block bg-purple-700 hover:bg-purple-600 text-white font-medium px-10 py-4 rounded-xl transition-all hover:scale-105 text-sm animate-pulse-glow">
+                    Découvrir votre destin →
+                </a>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- Barre de progression discrète en bas -->
+    <div class="px-6 pb-4">
+        <div class="max-w-2xl mx-auto flex items-center justify-between text-xs text-gray-700">
+            <span>{{ user.display_name }}</span>
+            {% if session %}
+            <div class="flex items-center gap-2">
+                <div class="w-24 h-1 bg-gray-800 rounded-full overflow-hidden">
+                    <div class="h-full bg-purple-700 rounded-full"
+                         style="width: {{ session.progress_percentage }}%"></div>
+                </div>
+                <span>{{ session.progress_percentage }}%</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Musique de fond -->
+<audio id="bg-music" loop preload="auto"></audio>
+<!-- Narration vocale -->
+<audio id="narration-audio" preload="auto"></audio>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/game.js' %}"></script>
+<script src="{% static 'js/choices.js' %}"></script>
+{% endblock %}

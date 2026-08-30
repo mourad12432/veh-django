@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion — VEH{% endblock %}
+
+{% block content %}
+<div class="np-grid relative min-h-screen flex items-center justify-center px-4 pt-16 overflow-hidden"
+     style="--grid-x: 50%; --grid-y: 20%">
+
+    <!-- Fond décoratif -->
+    <div class="absolute inset-0 bg-gradient-to-br from-gray-950 via-purple-950/20 to-gray-950 pointer-events-none"></div>
+
+    <div class="relative z-10 w-full max-w-md">
+
+        <!-- Logo / Titre -->
+        <div class="text-center mb-8">
+            <a href="{% url 'home' %}" class="inline-flex flex-col items-center gap-3">
+                <div class="w-12 h-12 bg-purple-700 rounded-xl flex items-center justify-center font-bold text-white">
+                    VEH
+                </div>
+                <span class="font-narrative text-gray-400 text-sm">Vous Êtes le Héro</span>
+            </a>
+            <h1 class="font-narrative text-3xl text-white mt-4">Bon retour</h1>
+            <p class="text-gray-500 text-sm mt-1">Vos aventures vous attendent.</p>
+        </div>
+
+        <!-- Carte du formulaire -->
+        <div class="bg-gray-900/80 border border-gray-800 rounded-2xl p-8 backdrop-blur-sm">
+
+            {% if form.errors %}
+            <div class="bg-red-900/40 border border-red-700/50 rounded-lg px-4 py-3 mb-6 text-red-300 text-sm">
+                Identifiants incorrects. Veuillez réessayer.
+            </div>
+            {% endif %}
+
+            <form method="post" class="space-y-5">
+                {% csrf_token %}
+
+                <!-- Nom d'utilisateur -->
+                <div>
+                    <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">
+                        Nom d'aventurier
+                    </label>
+                    {{ form.username }}
+                </div>
+
+                <!-- Mot de passe -->
+                <div>
+                    <label class="block text-gray-400 text-xs uppercase tracking-wider mb-2">
+                        Mot de passe
+                    </label>
+                    {{ form.password }}
+                </div>
+
+                <!-- Bouton de connexion -->
+                <button type="submit"
+                        class="np-btn w-full font-medium py-3 rounded-xl mt-2">
+                    Entrer dans l'aventure
+                </button>
+            </form>
+
+            <!-- Lien inscription -->
+            <p class="text-center text-gray-600 text-sm mt-6">
+                Pas encore de compte ?
+                <a href="{% url 'register' %}" class="text-purple-400 hover:text-purple-300 transition-colors ml-1">
+                    Créer un compte
+                </a>
+            </p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

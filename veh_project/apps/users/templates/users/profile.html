@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Mon Profil — VEH{% endblock %}
+
+{% block content %}
+<div class="pt-20 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 py-12">
+
+        <!-- En-tête du profil -->
+        <div class="flex items-center gap-6 mb-12">
+            <!-- Avatar -->
+            <div class="w-20 h-20 rounded-2xl overflow-hidden bg-gray-800 border border-gray-700 flex-shrink-0">
+                {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}" alt="Avatar" class="w-full h-full object-cover">
+                {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-3xl font-narrative text-purple-500">
+                        {{ user.display_name|first|upper }}
+                    </div>
+                {% endif %}
+            </div>
+            <div>
+                <h1 class="font-narrative text-3xl text-white">{{ user.display_name }}</h1>
+                <p class="text-gray-500 text-sm">@{{ user.username }}</p>
+                {% if user.bio %}
+                <p class="text-gray-400 text-sm mt-1">{{ user.bio }}</p>
+                {% endif %}
+                <p class="text-gray-700 text-xs mt-2">
+                    Aventurier depuis {{ user.created_at|date:"d F Y" }}
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- ═══ COLONNE GAUCHE : Édition du profil ═══ -->
+            <div class="lg:col-span-1">
+                <h2 class="text-gray-400 text-xs uppercase tracking-widest mb-4">Modifier le profil</h2>
+                <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+                    <form method="post" enctype="multipart/form-data" class="space-y-4">
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <div>
+                            <label class="block text-gray-500 text-xs uppercase tracking-wider mb-1.5">
+                                {{ field.label }}
+                            </label>
+                            {{ field }}
+                            {% if field.errors %}
+                            <p class="text-red-400 text-xs mt-1">{{ field.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        <button type="submit"
+                                class="w-full bg-purple-700 hover:bg-purple-600 text-white text-sm font-medium py-2.5 rounded-lg transition-colors mt-2">
+                            Sauvegarder
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ═══ COLONNE DROITE : Sessions de jeu ═══ -->
+            <div class="lg:col-span-2 space-y-8">
+
+                <!-- Aventures en cours -->
+                <div>
+                    <h2 class="text-gray-400 text-xs uppercase tracking-widest mb-4">
+                        Aventures en cours
+                        <span class="text-gray-700 ml-2">({{ active_sessions|length }})</span>
+                    </h2>
+                    {% if active_sessions %}
+                    <div class="space-y-3">
+                        {% for session in active_sessions %}
+                        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between">
+                            <div>
+                                <h3 class="text-gray-200 font-medium">{{ session.story.title }}</h3>
+                                <p class="text-gray-500 text-xs mt-1">
+                                    Scène : {{ session.current_scene.scene_key }}
+                                    &nbsp;·&nbsp;
+                                    {{ session.last_played|timesince }} ago
+                                </p>
+                                <!-- Barre de progression -->
+                                <div class="flex items-center gap-2 mt-2">
+                                    <div class="w-24 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                                        <div class="h-full bg-purple-600 rounded-full"
+                                             style="width: {{ session.progress_percentage }}%"></div>
+                                    </div>
+                                    <span class="text-gray-600 text-xs">{{ session.progress_percentage }}%</span>
+                                </div>
+                            </div>
+                            <a href="{% url 'resume' story_slug=session.story.slug %}"
+                               class="bg-purple-900/50 hover:bg-purple-800/60 border border-purple-700/50 text-purple-300 text-xs px-4 py-2 rounded-lg transition-colors flex-shrink-0">
+                                Continuer →
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="bg-gray-900/50 border border-gray-800 rounded-xl p-8 text-center">
+                        <p class="text-gray-600 text-sm">Aucune aventure en cours.</p>
+                        <a href="{% url 'home' %}" class="text-purple-500 hover:text-purple-400 text-sm mt-2 inline-block">
+                            Explorer la bibliothèque →
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Aventures terminées -->
+                <div>
+                    <h2 class="text-gray-400 text-xs uppercase tracking-widest mb-4">
+                        Aventures terminées
+                        <span class="text-gray-700 ml-2">({{ completed_sessions|length }})</span>
+                    </h2>
+                    {% if completed_sessions %}
+                    <div class="space-y-3">
+                        {% for session in completed_sessions %}
+                        <div class="bg-gray-900/50 border border-gray-800 rounded-xl p-5 flex items-center justify-between opacity-75">
+                            <div>
+                                <h3 class="text-gray-300 font-medium flex items-center gap-2">
+                                    {{ session.story.title }}
+                                    <span class="text-green-600 text-xs">✓ Terminée</span>
+                                </h3>
+                                <p class="text-gray-600 text-xs mt-1">
+                                    Terminée {{ session.last_played|timesince }} ago
+                                </p>
+                            </div>
+                            <form method="post" action="{% url 'restart' story_slug=session.story.slug %}">
+                                {% csrf_token %}
+                                <button type="submit"
+                                        class="border border-gray-700 hover:border-gray-500 text-gray-500 hover:text-gray-300 text-xs px-4 py-2 rounded-lg transition-colors">
+                                    Rejouer
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="bg-gray-900/50 border border-gray-800 rounded-xl p-8 text-center">
+                        <p class="text-gray-600 text-sm">Aucune aventure terminée.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

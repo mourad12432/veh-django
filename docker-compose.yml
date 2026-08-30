@@ -1,0 +1,36 @@
+# ─────────────────────────────────────────────────────────────
+#  VEH — Vous Êtes le Héros
+#  Lancer sur une machine où rien n'est installé (sauf Docker) :
+#
+#      docker compose up --build
+#
+#  Puis ouvrir : http://localhost:8000
+#  L'admin :     http://localhost:8000/admin/
+#
+#  Clé Gemini (narration TTS) : créez un fichier « .env » à côté de
+#  ce fichier avec :  GEMINI_API_KEY=votre_cle
+#  (facultatif — sans clé, la voix du navigateur prend le relais)
+# ─────────────────────────────────────────────────────────────
+services:
+  web:
+    build:
+      context: ./veh_project
+    image: veh-web
+    container_name: veh-web
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.docker
+      VEH_DATA_DIR: /data
+      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+      ALLOWED_HOSTS: "${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,10.0.2.2}"
+      # Superuser admin optionnel (décommentez dans .env pour l'activer)
+      DJANGO_SUPERUSER_USERNAME: "${DJANGO_SUPERUSER_USERNAME:-}"
+      DJANGO_SUPERUSER_EMAIL: "${DJANGO_SUPERUSER_EMAIL:-}"
+      DJANGO_SUPERUSER_PASSWORD: "${DJANGO_SUPERUSER_PASSWORD:-}"
+    volumes:
+      - veh_data:/data          # base SQLite + médias persistés
+    restart: unless-stopped
+
+volumes:
+  veh_data:

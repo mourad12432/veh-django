@@ -1,0 +1,185 @@
+{% extends "admin/base.html" %}
+{% comment %}
+    Administration VEH — habillage « NovaPay ».
+
+    L'admin de Django expose toute sa palette sous forme de variables CSS
+    (admin/css/base.css et dark_mode.css, qui ne contiennent QUE des variables).
+    Il suffit donc de les redéfinir ici : le bloc extrastyle est chargé après
+    ces deux feuilles, nos valeurs gagnent par ordre de source.
+
+    Les mêmes jetons que le reste du site (templates/base.html et le thème
+    Flutter) sont repris, pour que web, mobile et admin soient identiques.
+{% endcomment %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | VEH — Administration{% endblock %}
+
+{% block branding %}
+<div id="site-name">
+    <a href="{% url 'admin:index' %}">
+        <span class="veh-badge">VEH</span>
+        <span class="veh-wordmark">Administration</span>
+    </a>
+</div>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+
+<style>
+    /* ── Palette NovaPay, appliquée quel que soit le thème choisi ──────────
+       Le site public est sombre uniquement : l'admin l'est aussi, sur les
+       quatre sélecteurs possibles pour ne dépendre ni du réglage système
+       ni du bouton de thème.                                              */
+    html[data-theme="light"],
+    html[data-theme="dark"],
+    html[data-theme="auto"],
+    :root {
+        --primary:   #4A9EE8;
+        --secondary: #2A6AAA;
+        --accent:    #7EC8F0;
+        --primary-fg: #FFFFFF;
+
+        --body-fg:           #E4EEF8;
+        --body-bg:           #0F1319;
+        --body-quiet-color:  #8AAEC8;
+        --body-medium-color: #A8C4DC;
+        --body-loud-color:   #FFFFFF;
+
+        --header-color:           #E4EEF8;
+        --header-branding-color:  #4A9EE8;
+        --header-bg:              #141920;
+        --header-link-color:      #E4EEF8;
+
+        --breadcrumbs-fg:      #8AAEC8;
+        --breadcrumbs-link-fg: #E4EEF8;
+        --breadcrumbs-bg:      #141920;
+
+        --link-fg:           #6BB4EE;
+        --link-hover-color:  #7EC8F0;
+        --link-selected-fg:  #4A9EE8;
+
+        --hairline-color: #1E3050;
+        --border-color:   #1E3050;
+
+        --error-fg: #E85A5A;
+
+        --message-debug-bg:   #1A2130;
+        --message-info-bg:    #12395C;
+        --message-success-bg: #123D2C;
+        --message-warning-bg: #3F341A;
+        --message-error-bg:   #4A1D1D;
+
+        --darkened-bg:  #141920;
+        --selected-bg:  #1A2130;
+        --selected-row: #12395C;
+
+        --button-fg:               #FFFFFF;
+        --button-bg:               #2A6AAA;
+        --button-hover-bg:         #4A9EE8;
+        --default-button-bg:       #2A6AAA;
+        --default-button-hover-bg: #4A9EE8;
+        --close-button-bg:         #1E2838;
+        --close-button-hover-bg:   #2A4060;
+        --delete-button-bg:        #A83A3A;
+        --delete-button-hover-bg:  #E85A5A;
+
+        --object-tools-fg:       #FFFFFF;
+        --object-tools-bg:       #1E2838;
+        --object-tools-hover-bg: #2A4060;
+
+        --font-family-primary: "DM Sans", system-ui, sans-serif;
+
+        color-scheme: dark;
+    }
+
+    /* ── Typographie : Outfit pour les titres, comme sur le site ───────── */
+    h1, h2, h3, h4,
+    #site-name, .module h2, .module caption, .inline-group h2 {
+        font-family: "Outfit", system-ui, sans-serif;
+        letter-spacing: -0.03em;
+    }
+
+    /* ── En-tête ───────────────────────────────────────────────────────── */
+    #header {
+        border-bottom: 1px solid var(--hairline-color);
+        padding: 14px 24px;
+    }
+    #site-name a { display: inline-flex; align-items: center; gap: 10px; }
+    .veh-badge {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 30px; height: 30px;
+        border-radius: 8px;
+        background: #2A6AAA;
+        color: #fff;
+        font: 700 12px/1 "Outfit", sans-serif;
+        letter-spacing: 0;
+    }
+    .veh-wordmark { font-weight: 600; font-size: 17px; }
+
+    /* Le site est sombre uniquement : le sélecteur de thème n'aurait
+       aucun effet, on le retire plutôt que de laisser un bouton inerte. */
+    .theme-toggle { display: none !important; }
+
+    /* ── Surfaces ──────────────────────────────────────────────────────── */
+    .module, .inline-related, .dashboard .module {
+        border: 1px solid var(--hairline-color);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .module > h2, .module caption {
+        background: #1A2130;
+        color: var(--body-fg);
+        font-size: 13px;
+        letter-spacing: 0.02em;
+    }
+    div.breadcrumbs {
+        border-bottom: 1px solid var(--hairline-color);
+        padding: 12px 24px;
+    }
+
+    /* ── Boutons — mêmes rayons et transitions que le site ─────────────── */
+    .button, input[type=submit], input[type=button],
+    .submit-row input, a.button {
+        border-radius: 10px;
+        transition: background .5s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform .5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .button:hover, input[type=submit]:hover, a.button:hover {
+        transform: translateY(-1px);
+    }
+    .submit-row { border-radius: 12px; border: 1px solid var(--hairline-color); }
+
+    /* ── Champs de saisie ──────────────────────────────────────────────── */
+    input[type=text], input[type=password], input[type=email], input[type=url],
+    input[type=number], input[type=tel], textarea, select, .vTextField {
+        background: #0F1319;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        color: var(--body-fg);
+        padding: 8px 10px;
+    }
+    input:focus, textarea:focus, select:focus {
+        outline: none;
+        border-color: #2A6AAA;
+        box-shadow: 0 0 0 3px rgba(74, 158, 232, .15);
+    }
+
+    /* ── Listes ────────────────────────────────────────────────────────── */
+    #changelist table thead th { background: #1A2130; }
+    #changelist-filter { background: #141920; border-radius: 12px; }
+
+    /* ── Page de connexion ─────────────────────────────────────────────── */
+    body.login #container {
+        border: 1px solid var(--hairline-color);
+        border-radius: 16px;
+        background: #141920;
+        overflow: hidden;
+    }
+    body.login #header { border-radius: 0; }
+</style>
+{% endblock %}

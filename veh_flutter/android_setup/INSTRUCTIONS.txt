@@ -1,0 +1,63 @@
+════════════════════════════════════════════════════════════
+  MISE EN PLACE DE L'APPLICATION FLUTTER VEH
+════════════════════════════════════════════════════════════
+
+PRÉREQUIS
+---------
+  - Flutter SDK installé : https://flutter.dev/docs/get-started/install
+  - Android Studio + émulateur Android (ou vrai téléphone)
+  - Serveur Django démarré : python manage.py runserver
+
+ÉTAPES D'INSTALLATION
+----------------------
+
+1) Créer le projet Flutter depuis le dossier "projet vous êtes le hero" :
+
+   cd "c:\Users\user\Desktop\projet vous êtes le hero"
+   flutter create veh_flutter --platforms=android,ios
+   (Les fichiers lib/ et pubspec.yaml seront déjà présents — Flutter les conservera)
+
+   Si flutter create écrase pubspec.yaml, recopie celui du repo.
+
+2) Installer les dépendances :
+
+   cd veh_flutter
+   flutter pub get
+
+3) Configurer la permission réseau Android :
+
+   a) Copier android_setup/network_security_config.xml
+      → android/app/src/main/res/xml/network_security_config.xml
+      (Créer le dossier "xml" si inexistant)
+
+   b) Dans android/app/src/main/AndroidManifest.xml, ajouter
+      dans la balise <application ...> l'attribut suivant :
+      android:networkSecurityConfig="@xml/network_security_config"
+
+      Et ajouter avant <application> :
+      <uses-permission android:name="android.permission.INTERNET"/>
+
+4) Lancer l'émulateur puis :
+
+   flutter run
+
+════════════════════════════════════════════════════════════
+  CONFIGURATION IP SELON TON DEVICE
+════════════════════════════════════════════════════════════
+
+  Émulateur Android  → lib/core/constants.dart : baseUrl = 'http://10.0.2.2:8000'
+  Simulateur iOS     → baseUrl = 'http://localhost:8000'
+  Vrai téléphone     → baseUrl = 'http://192.168.X.X:8000'  (ton IP locale)
+                       + ajoute cette IP dans network_security_config.xml
+
+════════════════════════════════════════════════════════════
+  FLUX DE L'APPLICATION
+════════════════════════════════════════════════════════════
+
+  Démarrage → Splash (2s) → Login/Register → Accueil (liste histoires)
+  → Tap histoire → Jeu (scènes + choix) → Écran de fin
+
+  La progression est synchronisée avec le web : si tu joues sur
+  le navigateur, le mobile reprendra là où tu t'es arrêté.
+
+════════════════════════════════════════════════════════════
