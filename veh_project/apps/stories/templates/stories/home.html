@@ -98,16 +98,30 @@
                     <!-- Bouton d'action -->
                     {% if user.is_authenticated %}
                         {% if session and not session.is_completed %}
-                            <a href="{% url 'resume' story_slug=story.slug %}"
-                               class="block w-full text-center bg-purple-900/50 hover:bg-purple-800/60 border border-purple-700/50 text-purple-300 font-medium py-2.5 rounded-lg transition-all text-sm">
-                                Continuer l'aventure →
-                            </a>
+                            <div class="space-y-2">
+                                <a href="{% url 'resume' story_slug=story.slug %}"
+                                   class="block w-full text-center bg-purple-900/50 hover:bg-purple-800/60 border border-purple-700/50 text-purple-300 font-medium py-2.5 rounded-lg transition-all text-sm">
+                                    Continuer l'aventure →
+                                </a>
+                                <!-- Sans ce bouton, une partie en cours n'offrait aucun
+                                     moyen de revenir au début pour tenter une autre fin. -->
+                                <form method="post" action="{% url 'restart' story_slug=story.slug %}">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="block w-full text-center bg-gray-800/60 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-amber-300 py-2 rounded-lg transition-all text-xs">
+                                        Recommencer depuis le début
+                                    </button>
+                                </form>
+                            </div>
                         {% elif session and session.is_completed %}
                             <div class="space-y-2">
-                                <a href="{% url 'game' story_slug=story.slug scene_key=story.get_starting_scene.scene_key %}"
-                                   class="block w-full text-center bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 font-medium py-2.5 rounded-lg transition-all text-sm">
-                                    Rejouer
-                                </a>
+                                <form method="post" action="{% url 'restart' story_slug=story.slug %}">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="block w-full text-center bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 font-medium py-2.5 rounded-lg transition-all text-sm">
+                                        Rejouer — tenter une autre fin
+                                    </button>
+                                </form>
                             </div>
                         {% else %}
                             <a href="{% url 'game' story_slug=story.slug scene_key=story.get_starting_scene.scene_key %}"

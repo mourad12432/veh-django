@@ -148,7 +148,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onFieldSubmitted: (_) => _register(),
                     validator: (v) {
                       if (v!.isEmpty) return 'Champ requis';
-                      if (v.length < 6) return 'Au moins 6 caractères';
                       return null;
                     },
                   ),

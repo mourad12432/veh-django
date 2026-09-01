@@ -77,7 +77,17 @@ class SceneAPIView(APIView):
         )
         session.current_scene = scene
         session.platform = 'mobile'
-        session.save(update_fields=['current_scene', 'platform', 'last_played'])
+        update_fields = ['current_scene', 'platform', 'last_played']
+
+        # Le joueur rejoue après avoir vu une fin : tant qu'il n'est pas sur une
+        # scène finale, la session n'est plus terminée. Sans ce reset,
+        # `is_completed` restait à True et le premier choix de la nouvelle
+        # partie renvoyait aussitôt vers l'écran de fin.
+        if session.is_completed and not scene.is_ending:
+            session.is_completed = False
+            update_fields.append('is_completed')
+
+        session.save(update_fields=update_fields)
 
         serializer = SceneSerializer(scene, context={'request': request})
         return Response(serializer.data)
@@ -104,10 +114,12 @@ class MakeChoiceAPIView(APIView):
         choice = get_object_or_404(Choice, id=choice_id, scene__story=story)
         session = get_object_or_404(GameSession, user=request.user, story=story)
 
-        # Enregistrer l'historique
+        # Enregistrer l'historique. On rattache le choix à SA scène plutôt qu'à
+        # session.current_scene : c'est cet historique qui marque ensuite les
+        # chemins déjà explorés, il doit désigner la bonne scène.
         SessionHistory.objects.create(
             session=session,
-            scene=session.current_scene,
+            scene=choice.scene,
             choice_made=choice
         )
 
@@ -116,10 +128,11 @@ class MakeChoiceAPIView(APIView):
             session.save(update_fields=['is_completed'])
             return Response({'message': 'Histoire terminée.', 'is_completed': True})
 
-        # Mettre à jour la scène courante
+        # Mettre à jour la scène courante. `is_completed` suit strictement la
+        # scène atteinte : il ne doit pas rester à True depuis une partie
+        # précédente, sinon le mobile coupe la rejouée dès le premier choix.
         session.current_scene = choice.next_scene
-        if choice.next_scene.is_ending:
-            session.is_completed = True
+        session.is_completed = choice.next_scene.is_ending
         session.save(update_fields=['current_scene', 'is_completed', 'last_played'])
 
         next_scene_serializer = SceneSerializer(

@@ -7,6 +7,7 @@ from django.contrib.staticfiles import finders
 from django.templatetags.static import static as static_url
 
 from .models import Story, Scene, Choice
+from apps.sessions.models import SessionHistory
 
 # Extensions testées pour les images/audio statiques par scène (même ordre que le web)
 _IMAGE_EXTS = ('png', 'jpg', 'jpeg', 'jfif', 'webp')
@@ -27,16 +28,39 @@ def _static_asset_url(request, subfolder, key, extensions):
     return None
 
 
+def _explored_choice_ids(request, scene):
+    """
+    Ids des choix que ce joueur a déjà empruntés dans cette scène, toutes
+    parties confondues (même règle que la vue web `GameView`).
+    Sert à mettre en avant les chemins jamais essayés → autres fins.
+    """
+    user = getattr(request, 'user', None)
+    if user is None or not user.is_authenticated:
+        return frozenset()
+    return frozenset(
+        SessionHistory.objects
+        .filter(session__user=user, scene=scene)
+        .exclude(choice_made=None)
+        .values_list('choice_made_id', flat=True)
+    )
+
+
 class ChoiceSerializer(serializers.ModelSerializer):
     """Choix proposé au joueur, avec la clé de la scène suivante."""
     next_scene_key = serializers.SerializerMethodField()
+    is_explored = serializers.SerializerMethodField()
 
     class Meta:
         model = Choice
-        fields = ('id', 'text', 'next_scene_key', 'order')
+        fields = ('id', 'text', 'next_scene_key', 'order', 'is_explored')
 
     def get_next_scene_key(self, obj):
         return obj.next_scene.scene_key if obj.next_scene else None
+
+    def get_is_explored(self, obj):
+        # Rempli une fois pour toute la scène par SceneSerializer : une seule
+        # requête, quel que soit le nombre de choix.
+        return obj.id in self.context.get('explored_choice_ids', ())
 
 
 class SceneSerializer(serializers.ModelSerializer):
@@ -44,14 +68,28 @@ class SceneSerializer(serializers.ModelSerializer):
     choices = ChoiceSerializer(many=True, read_only=True)
     image_url = serializers.SerializerMethodField()
     audio_narration_url = serializers.SerializerMethodField()
+    is_revisit = serializers.SerializerMethodField()
 
     class Meta:
         model = Scene
         fields = (
             'id', 'scene_key', 'narrative', 'image_url',
             'music_file', 'music_transition', 'audio_narration_url',
-            'is_ending', 'ending_type', 'choices'
+            'is_ending', 'ending_type', 'is_revisit', 'choices'
         )
+
+    def to_representation(self, instance):
+        # Les choix déjà empruntés sont calculés ici, avant la sérialisation des
+        # champs : ChoiceSerializer (imbriqué, donc même contexte) y lit son
+        # `is_explored` sans requête supplémentaire.
+        self.context['explored_choice_ids'] = _explored_choice_ids(
+            self.context.get('request'), instance
+        )
+        return super().to_representation(instance)
+
+    def get_is_revisit(self, obj):
+        """True si le joueur est déjà passé par cette scène auparavant."""
+        return bool(self.context.get('explored_choice_ids'))
 
     def get_image_url(self, obj):
         """Image uploadée (admin) en priorité, sinon fallback static/scenes/{scene_key}."""

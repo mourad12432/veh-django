@@ -12,6 +12,10 @@ class Scene {
   final List<Choice> choices;
   final String? audioNarrationUrl;
 
+  /// Le joueur est déjà passé par cette scène dans une partie précédente :
+  /// on peut alors lui signaler les choix qu'il n'a jamais tentés.
+  final bool isRevisit;
+
   const Scene({
     required this.id,
     required this.sceneKey,
@@ -23,6 +27,7 @@ class Scene {
     this.endingType,
     required this.choices,
     this.audioNarrationUrl,
+    this.isRevisit = false,
   });
 
   factory Scene.fromJson(Map<String, dynamic> json) => Scene(
@@ -35,6 +40,7 @@ class Scene {
         isEnding: json['is_ending'] as bool? ?? false,
         endingType: json['ending_type'] as String?,
         audioNarrationUrl: json['audio_narration_url'] as String?,
+        isRevisit: json['is_revisit'] as bool? ?? false,
         choices: (json['choices'] as List<dynamic>? ?? [])
             .map((c) => Choice.fromJson(c as Map<String, dynamic>))
             .toList(),

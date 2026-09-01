@@ -39,13 +39,26 @@ class ResumeSessionView(View):
 @method_decorator(login_required, name='dispatch')
 class RestartSessionView(View):
     """
-    Repart de zéro sur une histoire (supprime la session existante).
+    Relance une histoire depuis sa scène de départ.
+
+    La session est *réinitialisée*, jamais supprimée : `SessionHistory` est en
+    CASCADE derrière elle, et un delete effaçait donc la mémoire des chemins
+    déjà empruntés — le joueur repartait sans aucun choix signalé en jaune,
+    alors que c'est précisément ce qui doit le guider vers une autre fin.
     """
     def post(self, request, story_slug):
         story = get_object_or_404(Story, slug=story_slug, is_published=True)
-        GameSession.objects.filter(user=request.user, story=story).delete()
 
         starting = story.get_starting_scene()
-        if starting:
-            return redirect('game', story_slug=story_slug, scene_key=starting.scene_key)
-        return redirect('home')
+        if not starting:
+            return redirect('home')
+
+        session = GameSession.objects.filter(
+            user=request.user, story=story
+        ).first()
+        if session:
+            session.current_scene = starting
+            session.is_completed = False
+            session.save(update_fields=['current_scene', 'is_completed', 'last_played'])
+
+        return redirect('game', story_slug=story_slug, scene_key=starting.scene_key)

@@ -96,7 +96,13 @@ class GameView(View):
         if not created:
             session.current_scene = scene
             session.platform = 'web'
-            session.save(update_fields=['current_scene', 'platform', 'last_played'])
+            update_fields = ['current_scene', 'platform', 'last_played']
+            # Le joueur rejoue après avoir vu une fin : la session repart en
+            # cours tant qu'il n'est pas sur une scène finale.
+            if session.is_completed and not scene.is_ending:
+                session.is_completed = False
+                update_fields.append('is_completed')
+            session.save(update_fields=update_fields)
 
         # Enrichir le texte narratif avec Gemini (optionnel)
         enriched_narrative = scene.narrative
@@ -155,12 +161,14 @@ class ChoiceView(View):
 
         # Récupérer la session en cours
         session = get_object_or_404(GameSession, user=request.user, story=story)
-        current_scene = session.current_scene
 
-        # Enregistrer ce choix dans l'historique
+        # Enregistrer ce choix dans l'historique. La scène d'origine du choix
+        # fait foi : elle ne peut pas être désynchronisée de ce que le joueur
+        # avait sous les yeux, contrairement à session.current_scene — et c'est
+        # elle qui sert ensuite à repérer les chemins déjà explorés.
         SessionHistory.objects.create(
             session=session,
-            scene=current_scene,
+            scene=choice.scene,
             choice_made=choice
         )
 
