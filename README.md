@@ -6,6 +6,8 @@ son image de fond — cette dernière étant **générée automatiquement à par
 texte**.
 
 Deux clients, un seul serveur :
+attention la génération des images il demande de rester connecter en ligne pendant 18 à 20  minutes et l'images est crée il sera placé automatique dans static 
+même chose pour la voie de lecteur améliorer
 
 | | |
 |---|---|
