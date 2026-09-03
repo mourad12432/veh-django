@@ -131,3 +131,35 @@ CORS_ALLOWED_ORIGINS = [
 
 # Clé API Gemini
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Illustration automatique des scènes (apps.stories.services.image_service)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Génère l'image de fond dès qu'un auteur enregistre une scène dans l'admin.
+# Mettre SCENE_IMAGE_AUTOGEN=0 dans .env pour ne garder que la génération
+# manuelle (action de l'admin + commande generate_scene_images).
+SCENE_IMAGE_AUTOGEN = os.environ.get('SCENE_IMAGE_AUTOGEN', '1') not in ('0', 'false', 'False')
+
+# Backends d'image, en liste séparée par des virgules, essayés dans l'ordre.
+#   pollinations = gratuit, sans clé, sans facturation
+#   gemini       = meilleure qualité, exige la facturation activée
+# Vide = les valeurs par défaut du service (pollinations d'abord).
+SCENE_IMAGE_BACKEND = os.environ.get('SCENE_IMAGE_BACKEND') or ''
+SCENE_IMAGE_POLLINATIONS_MODEL = os.environ.get('SCENE_IMAGE_POLLINATIONS_MODEL') or ''
+
+# Modèles Gemini, en liste séparée par des virgules : ils sont essayés dans l'ordre
+# jusqu'à ce que l'un réponde, car Google retire ses modèles sans préavis et
+# les surcharge aux heures de pointe. Vide = les valeurs par défaut du service.
+SCENE_IMAGE_PROMPT_MODEL = os.environ.get('SCENE_IMAGE_PROMPT_MODEL') or ''
+SCENE_IMAGE_MODEL = os.environ.get('SCENE_IMAGE_MODEL') or ''
+# Format du fond de scène
+SCENE_IMAGE_ASPECT_RATIO = os.environ.get('SCENE_IMAGE_ASPECT_RATIO') or '16:9'
+
+# Direction artistique commune à toutes les scènes : c'est elle qui rend les
+# illustrations cohérentes entre elles. La modifier régénère toutes les images.
+SCENE_IMAGE_STYLE = os.environ.get('SCENE_IMAGE_STYLE') or (
+    "illustration numérique cinématographique, peinture digitale détaillée, "
+    "éclairage dramatique, palette sombre et contrastée, ambiance de roman "
+    "interactif, plan large, aucun texte ni logo dans l'image"
+)

@@ -107,6 +107,36 @@ class Scene(models.Model):
         null=True,
         verbose_name='Image d\'ambiance'
     )
+    image_prompt = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Prompt visuel (IA)',
+        help_text=(
+            'Description envoyée au générateur d\'images. Laissez vide : '
+            'Gemini l\'écrit automatiquement à partir du texte narratif. '
+            'Si vous le modifiez, l\'image est refaite au prochain enregistrement.'
+        )
+    )
+    image_auto_generate = models.BooleanField(
+        default=True,
+        verbose_name='Illustrer automatiquement',
+        help_text=(
+            'Génère l\'image de fond avec l\'IA à l\'enregistrement, tant qu\'aucune '
+            'image n\'a été uploadée à la main. Décochez pour gérer le visuel vous-même.'
+        )
+    )
+    image_is_generated = models.BooleanField(
+        default=False,
+        editable=False,
+        verbose_name='Image générée par l\'IA'
+    )
+    image_source_hash = models.CharField(
+        max_length=40,
+        blank=True,
+        default='',
+        editable=False,
+        verbose_name='Empreinte du texte illustré'
+    )
     music_file = models.CharField(
         max_length=100,
         choices=MUSIC_CHOICES,

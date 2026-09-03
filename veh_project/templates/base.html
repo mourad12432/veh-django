@@ -210,6 +210,9 @@
                 <a href="{% url 'home' %}" class="np-nav-link text-sm">Bibliothèque</a>
 
                 {% if user.is_authenticated %}
+                    {% if user.is_staff %}
+                        <a href="{% url 'narrateur_accueil' %}" class="np-nav-link text-sm">Narrateur</a>
+                    {% endif %}
                     <a href="{% url 'profile' %}" class="np-nav-link text-sm">Mon Profil</a>
                     <form method="post" action="{% url 'logout' %}" class="inline">
                         {% csrf_token %}

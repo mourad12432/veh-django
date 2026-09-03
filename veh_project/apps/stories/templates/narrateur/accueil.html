@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Narrateur — VEH{% endblock %}
+
+{% block content %}
+<div class="pt-24 pb-20 max-w-[1100px] mx-auto px-6">
+
+    <div class="flex items-end justify-between gap-6 flex-wrap mb-10">
+        <div>
+            <div class="inline-block bg-purple-900/40 border border-purple-700/50 rounded-full px-4 py-1 text-purple-300 text-xs uppercase tracking-widest mb-4">
+                Espace administrateur
+            </div>
+            <h1 class="font-narrative text-4xl md:text-5xl text-white">Narrateur</h1>
+            <p class="text-gray-400 mt-2">Bâtissez vos histoires scène par scène.</p>
+        </div>
+        <a href="{% url 'narrateur_histoire_nouvelle' %}"
+           class="np-btn font-medium px-6 py-3 rounded-xl">+ Nouvelle histoire</a>
+    </div>
+
+    {% if not histoires %}
+        <div class="border border-dashed border-gray-700 rounded-2xl p-14 text-center">
+            <p class="text-gray-400">Aucune histoire pour l'instant.</p>
+            <a href="{% url 'narrateur_histoire_nouvelle' %}"
+               class="np-btn inline-block mt-5 font-medium px-6 py-3 rounded-xl">
+                Créer la première
+            </a>
+        </div>
+    {% else %}
+        <div class="grid gap-4">
+        {% for h in histoires %}
+            <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6 flex flex-wrap items-center gap-6 justify-between">
+                <div class="min-w-[240px]">
+                    <div class="flex items-center gap-3">
+                        <h2 class="font-narrative text-xl text-white">{{ h.story.title }}</h2>
+                        {% if h.story.is_published %}
+                            <span class="text-[11px] px-2 py-0.5 rounded-full bg-green-900 text-green-300 border border-green-700">publiée</span>
+                        {% else %}
+                            <span class="text-[11px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-400 border border-gray-700">brouillon</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-gray-500 text-sm mt-1">{{ h.story.description|truncatechars:90 }}</p>
+                </div>
+
+                <div class="flex items-center gap-7 text-center">
+                    <div>
+                        <div class="text-2xl font-narrative text-gray-200">{{ h.scenes }}</div>
+                        <div class="text-[11px] uppercase tracking-wider text-gray-500">scènes</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-narrative text-gray-200">{{ h.fins }}</div>
+                        <div class="text-[11px] uppercase tracking-wider text-gray-500">fins</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-narrative {% if h.branches_ouvertes %}text-yellow-200{% else %}text-gray-200{% endif %}">{{ h.branches_ouvertes }}</div>
+                        <div class="text-[11px] uppercase tracking-wider text-gray-500">à écrire</div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <a href="{% url 'narrateur_carte' h.story.slug %}"
+                       class="text-sm px-4 py-2 rounded-lg border border-gray-700 text-gray-300 hover:border-purple-700 hover:text-white transition-colors duration-500 ease-silk">
+                        Carte
+                    </a>
+                    {% if h.depart %}
+                        <a href="{% url 'narrateur_scene' h.story.slug h.depart.scene_key %}"
+                           class="np-btn text-sm font-medium px-4 py-2 rounded-lg">Continuer</a>
+                    {% else %}
+                        <a href="{% url 'narrateur_scene_nouvelle' h.story.slug %}"
+                           class="np-btn text-sm font-medium px-4 py-2 rounded-lg">Première scène</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

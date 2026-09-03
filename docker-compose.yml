@@ -7,8 +7,8 @@
 #  Puis ouvrir : http://localhost:8000
 #  L'admin :     http://localhost:8000/admin/
 #
-#  Clé Gemini (narration TTS) : créez un fichier « .env » à côté de
-#  ce fichier avec :  GEMINI_API_KEY=votre_cle
+#  Clé Gemini (narration TTS + illustration des scènes) : créez un « .env »
+#  à côté de ce fichier avec :  GEMINI_API_KEY=votre_cle
 #  (facultatif — sans clé, la voix du navigateur prend le relais)
 # ─────────────────────────────────────────────────────────────
 services:
@@ -24,6 +24,14 @@ services:
       VEH_DATA_DIR: /data
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
       ALLOWED_HOSTS: "${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,10.0.2.2}"
+      # Illustration automatique des scènes (voir .env.example)
+      SCENE_IMAGE_AUTOGEN: "${SCENE_IMAGE_AUTOGEN:-1}"
+      SCENE_IMAGE_BACKEND: "${SCENE_IMAGE_BACKEND:-}"
+      SCENE_IMAGE_POLLINATIONS_MODEL: "${SCENE_IMAGE_POLLINATIONS_MODEL:-}"
+      SCENE_IMAGE_PROMPT_MODEL: "${SCENE_IMAGE_PROMPT_MODEL:-}"
+      SCENE_IMAGE_MODEL: "${SCENE_IMAGE_MODEL:-}"
+      SCENE_IMAGE_ASPECT_RATIO: "${SCENE_IMAGE_ASPECT_RATIO:-}"
+      SCENE_IMAGE_STYLE: "${SCENE_IMAGE_STYLE:-}"
       # Superuser admin optionnel (décommentez dans .env pour l'activer)
       DJANGO_SUPERUSER_USERNAME: "${DJANGO_SUPERUSER_USERNAME:-}"
       DJANGO_SUPERUSER_EMAIL: "${DJANGO_SUPERUSER_EMAIL:-}"

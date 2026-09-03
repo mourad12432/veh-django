@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Carte — {{ story.title }}{% endblock %}
+
+{% block content %}
+<div class="pt-24 pb-20 max-w-[1280px] mx-auto px-6">
+
+    <div class="flex items-start justify-between gap-6 flex-wrap mb-8">
+        <div>
+            <a href="{% url 'narrateur_accueil' %}"
+               class="text-gray-500 text-sm hover:text-gray-300">← Narrateur</a>
+            <h1 class="font-narrative text-3xl md:text-4xl text-white mt-2">{{ story.title }}</h1>
+            <p class="text-gray-400 mt-1">L'arbre de l'histoire</p>
+        </div>
+        <div class="flex items-center gap-7 text-center">
+            <div>
+                <div class="text-2xl font-narrative text-gray-200">{{ carte.total }}</div>
+                <div class="text-[11px] uppercase tracking-wider text-gray-500">scènes</div>
+            </div>
+            <div>
+                <div class="text-2xl font-narrative text-gray-200">{{ carte.fins|length }}</div>
+                <div class="text-[11px] uppercase tracking-wider text-gray-500">fins</div>
+            </div>
+            <div>
+                <div class="text-2xl font-narrative {% if carte.branches_ouvertes %}text-yellow-200{% else %}text-gray-200{% endif %}">{{ carte.branches_ouvertes }}</div>
+                <div class="text-[11px] uppercase tracking-wider text-gray-500">à écrire</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Légende -->
+    <div class="flex flex-wrap gap-5 text-xs text-gray-400 mb-4">
+        <span class="flex items-center gap-2"><i class="w-3 h-3 rounded-sm inline-block" style="background:#2E9E6C"></i>départ</span>
+        <span class="flex items-center gap-2"><i class="w-3 h-3 rounded-sm inline-block" style="background:#2A6AAA"></i>scène</span>
+        <span class="flex items-center gap-2"><i class="w-3 h-3 rounded-sm inline-block" style="background:#3DCC8E"></i>bonne fin</span>
+        <span class="flex items-center gap-2"><i class="w-3 h-3 rounded-sm inline-block" style="background:#E85A5A"></i>mauvaise fin</span>
+        <span class="flex items-center gap-2"><i class="w-3 h-3 rounded-sm inline-block" style="background:#9C8038"></i>fin neutre</span>
+        <span class="flex items-center gap-2"><i class="w-3 h-3 rounded-sm inline-block border border-dashed border-gray-500"></i>orpheline</span>
+    </div>
+
+    {% if not carte.noeuds %}
+        <div class="border border-dashed border-gray-700 rounded-2xl p-14 text-center">
+            <p class="text-gray-400">Cette histoire n'a encore aucune scène.</p>
+            <a href="{% url 'narrateur_scene_nouvelle' story.slug %}"
+               class="np-btn inline-block mt-5 font-medium px-6 py-3 rounded-xl">Écrire la première</a>
+        </div>
+    {% else %}
+        <div class="bg-gray-900 border border-gray-700 rounded-2xl p-4 overflow-x-auto">
+            <svg width="{{ carte.largeur }}" height="{{ carte.hauteur }}"
+                 viewBox="0 0 {{ carte.largeur }} {{ carte.hauteur }}"
+                 style="min-width:{{ carte.largeur }}px"
+                 xmlns="http://www.w3.org/2000/svg">
+
+                <defs>
+                    <marker id="fleche" viewBox="0 0 10 10" refX="9" refY="5"
+                            markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#2A4060"/>
+                    </marker>
+                </defs>
+
+                <!-- Arêtes d'abord : elles passent sous les nœuds -->
+                {% for a in carte.aretes %}
+                    <path d="{{ a.chemin }}" fill="none"
+                          stroke="{% if a.retour %}#9C8038{% else %}#2A4060{% endif %}"
+                          stroke-width="2"
+                          {% if a.retour %}stroke-dasharray="5 4"{% endif %}
+                          marker-end="url(#fleche)"/>
+                    <text x="{{ a.tx }}" y="{{ a.ty }}" text-anchor="middle"
+                          fill="#506070" font-size="10"
+                          font-family="DM Sans, sans-serif">{{ a.texte }}</text>
+                {% endfor %}
+
+                <!-- Nœuds : chacun est un lien vers l'éditeur de la scène -->
+                {% for n in carte.noeuds %}
+                <a href="{% url 'narrateur_scene' story.slug n.scene.scene_key %}">
+                    <rect x="{{ n.x }}" y="{{ n.y }}" width="{{ n.w }}" height="{{ n.h }}"
+                          rx="12" fill="#141920"
+                          stroke="{{ n.couleur }}" stroke-width="2"
+                          {% if n.orpheline %}stroke-dasharray="6 4"{% endif %}/>
+                    <rect x="{{ n.x }}" y="{{ n.y }}" width="4" height="{{ n.h }}"
+                          rx="2" fill="{{ n.couleur }}"/>
+                    <text x="{{ n.x|add:16 }}" y="{{ n.y|add:26 }}"
+                          fill="#E4EEF8" font-size="12" font-weight="600"
+                          font-family="DM Sans, sans-serif">{{ n.scene.scene_key|truncatechars:24 }}</text>
+                    <text x="{{ n.x|add:16 }}" y="{{ n.y|add:45 }}"
+                          fill="#8AAEC8" font-size="10"
+                          font-family="DM Sans, sans-serif">{{ n.extrait|truncatechars:30 }}</text>
+                    {% if n.branches_ouvertes %}
+                        <text x="{{ n.x|add:16 }}" y="{{ n.y|add:62 }}"
+                              fill="#F3E0AE" font-size="10"
+                              font-family="DM Sans, sans-serif">{{ n.branches_ouvertes }} branche(s) à écrire</text>
+                    {% endif %}
+                    <title>{{ n.scene.narrative|truncatechars:180 }}</title>
+                </a>
+                {% endfor %}
+            </svg>
+        </div>
+
+        {% if carte.orphelines %}
+            <p class="text-gray-500 text-sm mt-4">
+                {{ carte.orphelines|length }} scène(s) qu'aucun choix n'atteint —
+                colonne en pointillés à droite.
+            </p>
+        {% endif %}
+        {% if not carte.depart %}
+            <p class="text-yellow-200 text-sm mt-4">
+                Aucune scène de départ : le joueur ne peut pas commencer cette histoire.
+            </p>
+        {% endif %}
+    {% endif %}
+
+    <div class="mt-8">
+        <a href="{% url 'narrateur_scene_nouvelle' story.slug %}"
+           class="np-btn inline-block font-medium px-6 py-3 rounded-xl">+ Nouvelle scène</a>
+    </div>
+</div>
+{% endblock %}

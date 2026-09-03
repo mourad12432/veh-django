@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}{{ story.title }} — Narrateur{% endblock %}
+
+{% block content %}
+<div class="pt-24 pb-24 max-w-[900px] mx-auto px-6">
+
+    <!-- ══════ En-tête : contexte à gauche, carte en haut à droite ══════ -->
+    <div class="flex items-start justify-between gap-6 mb-8">
+        <div class="min-w-0">
+            <a href="{% url 'narrateur_accueil' %}"
+               class="text-gray-500 text-sm hover:text-gray-300">← Narrateur</a>
+            <h1 class="font-narrative text-3xl md:text-4xl text-white mt-2">{{ story.title }}</h1>
+            <p class="text-gray-400 mt-1">
+                {% if scene %}
+                    Scène <span class="text-purple-300 font-mono text-sm">{{ scene.scene_key }}</span>
+                {% elif premiere_scene %}
+                    Première scène — c'est par elle que le joueur commence.
+                {% else %}
+                    Nouvelle scène
+                {% endif %}
+            </p>
+            {% if choix_source %}
+                <p class="mt-3 inline-block bg-purple-900/40 border border-purple-700/50 rounded-lg px-3 py-2 text-purple-200 text-sm">
+                    Suite du choix « {{ choix_source.text }} »
+                    <span class="text-purple-400/70">— depuis {{ choix_source.scene.scene_key }}</span>
+                </p>
+            {% endif %}
+        </div>
+
+        <a href="{% url 'narrateur_carte' story.slug %}"
+           class="shrink-0 flex items-center gap-2 text-sm px-4 py-2.5 rounded-xl border border-gray-700 text-gray-300 hover:border-purple-700 hover:text-white transition-colors duration-500 ease-silk">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/>
+            </svg>
+            Carte
+        </a>
+    </div>
+
+    <!-- ══════════════════════ FORMULAIRE ══════════════════════ -->
+    <form method="post" class="space-y-8">
+        {% csrf_token %}
+        {% if choix_source %}<input type="hidden" name="choix" value="{{ choix_source.pk }}">{% endif %}
+
+        {% if form.non_field_errors %}
+            <div class="bg-red-900/50 border border-red-700 text-red-200 rounded-xl px-4 py-3 text-sm">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <!-- ── Le texte ── -->
+        <section class="bg-gray-900 border border-gray-700 rounded-2xl p-6">
+            <label for="{{ form.narrative.id_for_label }}"
+                   class="block font-narrative text-lg text-white mb-3">
+                {{ form.narrative.label }}
+            </label>
+            {{ form.narrative }}
+            {% for erreur in form.narrative.errors %}
+                <p class="text-red-400 text-xs mt-2">{{ erreur }}</p>
+            {% endfor %}
+        </section>
+
+        <!-- ── L'ambiance ── -->
+        <section class="bg-gray-900 border border-gray-700 rounded-2xl p-6">
+            <h2 class="font-narrative text-lg text-white mb-4">Ambiance</h2>
+            <div class="grid sm:grid-cols-2 gap-5">
+                <div>
+                    <label for="{{ form.music_file.id_for_label }}"
+                           class="block text-gray-400 text-sm mb-2">{{ form.music_file.label }}</label>
+                    {{ form.music_file }}
+                </div>
+                <div>
+                    <label for="{{ form.music_transition.id_for_label }}"
+                           class="block text-gray-400 text-sm mb-2">{{ form.music_transition.label }}</label>
+                    {{ form.music_transition }}
+                </div>
+            </div>
+            <label class="flex items-center gap-3 mt-5 cursor-pointer">
+                {{ form.image_auto_generate }}
+                <span class="text-gray-300 text-sm">{{ form.image_auto_generate.label }}</span>
+            </label>
+            <p class="text-gray-600 text-xs mt-1 ml-7">
+                L'image de fond est déduite du texte à l'enregistrement.
+            </p>
+        </section>
+
+        <!-- ── Les choix ── -->
+        <section class="bg-gray-900 border border-gray-700 rounded-2xl p-6" id="bloc-choix">
+            <div class="flex items-center justify-between mb-1">
+                <h2 class="font-narrative text-lg text-white">Les choix du joueur</h2>
+                <span class="text-gray-500 text-xs">1 à {{ max_choix }}</span>
+            </div>
+            <p class="text-gray-500 text-sm mb-5">
+                Videz un choix pour le supprimer. Une scène de fin n'en a aucun.
+            </p>
+
+            {{ formset.management_form }}
+            {% if formset.non_form_errors %}
+                <div class="bg-red-900/50 border border-red-700 text-red-200 rounded-xl px-4 py-3 text-sm mb-4">
+                    {% for erreur in formset.non_form_errors %}{{ erreur }}{% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="space-y-3">
+                {% for cf in formset %}
+                    <div class="slot-choix flex items-center gap-3"
+                         {% if forloop.counter0 >= nb_choix_visibles %}hidden{% endif %}>
+                        <span class="shrink-0 w-8 h-8 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-400 text-sm">
+                            {{ forloop.counter }}
+                        </span>
+                        <div class="flex-1">
+                            {% for champ in cf.hidden_fields %}{{ champ }}{% endfor %}
+                            {{ cf.text }}
+                            {% for erreur in cf.text.errors %}
+                                <p class="text-red-400 text-xs mt-1">{{ erreur }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <button type="button" id="ajouter-choix"
+                    class="mt-4 text-sm px-4 py-2 rounded-lg border border-dashed border-gray-700 text-gray-400 hover:border-purple-700 hover:text-white transition-colors duration-500 ease-silk">
+                + Ajouter un choix
+            </button>
+        </section>
+
+        <!-- ── Statut ── -->
+        <section class="bg-gray-900 border border-gray-700 rounded-2xl p-6">
+            <h2 class="font-narrative text-lg text-white mb-4">Statut de la scène</h2>
+            <div class="space-y-3">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    {{ form.is_starting_scene }}
+                    <span class="text-gray-300 text-sm">{{ form.is_starting_scene.label }}</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer">
+                    {{ form.is_ending }}
+                    <span class="text-gray-300 text-sm">{{ form.is_ending.label }}</span>
+                </label>
+                <div class="ml-7 max-w-xs">
+                    <label for="{{ form.ending_type.id_for_label }}"
+                           class="block text-gray-500 text-xs mb-2">{{ form.ending_type.label }}</label>
+                    {{ form.ending_type }}
+                    {% for erreur in form.ending_type.errors %}
+                        <p class="text-red-400 text-xs mt-1">{{ erreur }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <details class="mt-6">
+                <summary class="text-gray-500 text-sm cursor-pointer hover:text-gray-300">Avancé</summary>
+                <div class="mt-3 max-w-sm">
+                    <label for="{{ form.scene_key.id_for_label }}"
+                           class="block text-gray-500 text-xs mb-2">{{ form.scene_key.label }}</label>
+                    {{ form.scene_key }}
+                    <p class="text-gray-600 text-xs mt-1">Laissé vide : déduit des premiers mots du texte.</p>
+                    {% for erreur in form.scene_key.errors %}
+                        <p class="text-red-400 text-xs mt-1">{{ erreur }}</p>
+                    {% endfor %}
+                </div>
+            </details>
+        </section>
+
+        <div class="flex gap-3">
+            <button type="submit" class="np-btn font-medium px-8 py-3 rounded-xl">Enregistrer</button>
+            <a href="{% url 'narrateur_carte' story.slug %}"
+               class="px-6 py-3 rounded-xl border border-gray-700 text-gray-400 hover:text-white transition-colors duration-500 ease-silk">
+                Voir l'arbre
+            </a>
+        </div>
+    </form>
+
+    <!-- ══════ Après enregistrement : où continuer l'arbre ══════ -->
+    {% if choix_enregistres %}
+    <section class="mt-12">
+        <h2 class="font-narrative text-2xl text-white mb-1">La suite</h2>
+        <p class="text-gray-500 text-sm mb-5">
+            Choisissez la branche à écrire maintenant.
+        </p>
+        <div class="grid gap-3">
+        {% for choix in choix_enregistres %}
+            <div class="bg-gray-900 border {% if choix.next_scene %}border-gray-700{% else %}border-purple-700/60{% endif %} rounded-2xl p-5 flex items-center justify-between gap-5 flex-wrap">
+                <div class="min-w-0">
+                    <p class="text-gray-200">{{ choix.text }}</p>
+                    {% if choix.next_scene %}
+                        <p class="text-gray-500 text-xs mt-1">
+                            mène à <span class="font-mono">{{ choix.next_scene.scene_key }}</span>
+                        </p>
+                    {% else %}
+                        <p class="text-purple-300 text-xs mt-1">branche non écrite</p>
+                    {% endif %}
+                </div>
+                {% if choix.next_scene %}
+                    <a href="{% url 'narrateur_scene' story.slug choix.next_scene.scene_key %}"
+                       class="shrink-0 text-sm px-4 py-2 rounded-lg border border-gray-700 text-gray-300 hover:border-purple-700 hover:text-white transition-colors duration-500 ease-silk">
+                        Ouvrir la scène
+                    </a>
+                {% else %}
+                    <a href="{% url 'narrateur_scene_nouvelle' story.slug %}?choix={{ choix.pk }}"
+                       class="np-btn shrink-0 text-sm font-medium px-4 py-2 rounded-lg">
+                        Créer la scène de ce choix →
+                    </a>
+                {% endif %}
+            </div>
+        {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<noscript>
+    <style>.slot-choix[hidden] { display: flex !important; }</style>
+</noscript>
+<script>
+    /* Les emplacements de choix sont tous rendus par Django ; on se contente
+       d'en révéler un de plus à chaque clic. Aucun clonage de formulaire, donc
+       aucun risque de désynchroniser le management_form du formset. */
+    (() => {
+        const slots  = Array.from(document.querySelectorAll('.slot-choix'));
+        const bouton = document.getElementById('ajouter-choix');
+        if (!slots.length || !bouton) return;
+
+        const majBouton = () => {
+            const restants = slots.filter(s => s.hidden).length;
+            bouton.hidden = restants === 0;
+        };
+
+        bouton.addEventListener('click', () => {
+            const suivant = slots.find(s => s.hidden);
+            if (suivant) {
+                suivant.hidden = false;
+                const champ = suivant.querySelector('input[type="text"]');
+                if (champ) champ.focus();
+            }
+            majBouton();
+        });
+
+        majBouton();
+    })();
+
+    /* Le type de fin ne concerne que les scènes finales. */
+    (() => {
+        const estFin = document.getElementById('{{ form.is_ending.id_for_label }}');
+        const type   = document.getElementById('{{ form.ending_type.id_for_label }}');
+        const choix  = document.getElementById('bloc-choix');
+        if (!estFin || !type) return;
+        const maj = () => {
+            type.closest('div').style.opacity = estFin.checked ? '1' : '.4';
+            type.disabled = !estFin.checked;
+            if (choix) choix.style.opacity = estFin.checked ? '.4' : '1';
+        };
+        estFin.addEventListener('change', maj);
+        maj();
+    })();
+</script>
+{% endblock %}

@@ -3,6 +3,7 @@ URLs principales du projet VEH.
 - /          → application web (Django Templates)
 - /api/      → REST API pour Flutter
 - /admin/    → interface d'administration Django
+- /narrateur/ → interface de création d'histoires (staff)
 """
 
 from django.contrib import admin
@@ -16,6 +17,9 @@ urlpatterns = [
 
     # Application web — utilisateurs (login, register, profil)
     path('users/', include('apps.users.urls')),
+
+    # Interface Narrateur — création d'histoires (administrateurs seulement)
+    path('narrateur/', include('apps.stories.urls_narrator')),
 
     # Application web — jeu (accueil, jeu, endings)
     path('', include('apps.stories.urls_web')),

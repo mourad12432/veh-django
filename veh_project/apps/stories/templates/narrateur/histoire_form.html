@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Nouvelle histoire — Narrateur{% endblock %}
+
+{% block content %}
+<div class="pt-24 pb-20 max-w-[720px] mx-auto px-6">
+
+    <a href="{% url 'narrateur_accueil' %}" class="text-gray-500 text-sm hover:text-gray-300">← Narrateur</a>
+    <h1 class="font-narrative text-4xl text-white mt-3 mb-8">Nouvelle histoire</h1>
+
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="bg-red-900/50 border border-red-700 text-red-200 rounded-xl px-4 py-3 text-sm">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% for field in form %}
+            <div>
+                {% if field.field.widget.input_type == 'checkbox' %}
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        {{ field }}
+                        <span class="text-gray-300 text-sm">{{ field.label }}</span>
+                    </label>
+                {% else %}
+                    <label for="{{ field.id_for_label }}"
+                           class="block text-gray-400 text-sm mb-2">{{ field.label }}</label>
+                    {{ field }}
+                {% endif %}
+                {% if field.help_text %}
+                    <p class="text-gray-600 text-xs mt-1">{{ field.help_text }}</p>
+                {% endif %}
+                {% for erreur in field.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ erreur }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        <div class="flex gap-3 pt-2">
+            <button type="submit" class="np-btn font-medium px-7 py-3 rounded-xl">
+                Créer et écrire la première scène
+            </button>
+            <a href="{% url 'narrateur_accueil' %}"
+               class="px-6 py-3 rounded-xl border border-gray-700 text-gray-400 hover:text-white transition-colors duration-500 ease-silk">
+                Annuler
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
