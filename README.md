@@ -405,41 +405,8 @@ vouseteshero-main/
 
 ---
 
-## 12. Dépannage
-
-**« GEMINI_API_KEY n'est pas configurée »**
-Normal et sans gravité : le jeu bascule sur les chemins gratuits. Si vous
-*voulez* la clé, vérifiez que vous l'avez mise dans **`veh_project/.env`** (pas
-dans celui de la racine, ni dans `.env.example`).
-
-**Les images ne se génèrent pas**
-Lancez `python manage.py generate_scene_images --dry-run` : il dit quelles
-scènes seraient traitées. Une scène qui a déjà un visuel dans `static/scenes/`
-est volontairement ignorée. Vérifiez aussi que « Générer l'illustration
-automatiquement » est coché sur la scène.
-
-**« quota limite = 0 » sur les modèles `*-image`**
-La génération d'images Gemini n'est pas incluse dans le palier gratuit. Restez
-sur le backend gratuit (`SCENE_IMAGE_BACKEND=` vide) ou activez la facturation.
-
-**L'app Flutter n'atteint pas le serveur**
-Trois causes, dans l'ordre : `baseUrl` mal réglée (§8), serveur lancé sur
-`127.0.0.1` au lieu de `0.0.0.0`, ou IP absente de `ALLOWED_HOSTS`.
-
-**`DisallowedHost` dans le navigateur**
-Ajoutez l'hôte utilisé à `ALLOWED_HOSTS` dans `veh_project/.env`.
-
-**Accents et cadres illisibles dans la console Windows**
-Console en cp1252. Les commandes du projet retombent d'elles-mêmes sur une
-sortie ASCII ; pour le rendu complet, utilisez Windows Terminal ou lancez
-`chcp 65001`.
-
-**Repartir d'une base vide**
-Supprimez `veh_project/db.sqlite3`, puis rejouez `migrate` et les `seed_*`.
-En Docker : `docker compose down -v`.
-
----
-
+## 12. attention 
+les images ne seront pas générer qu' aprés de 18 à 20 minutes pour les scènes qui n'ont pas de background et la même choses pour les voix enregistré de bon qualité 
 ## Notes
 
 - Le projet est prévu pour le développement et la démonstration : `DEBUG=True`,
